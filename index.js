@@ -72,37 +72,48 @@ function locationExists(locationPath) {
   });
 }
 
-function deployProject() {
+function deployProject(command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
-    executeCommand('mup', ['deploy']).then(function (stdout) {
-      emitLog(stdout);
-      emitLog('Deployment process done.');
-    }, commandError);
+    if(!command) {
+      executeCommand('mup', ['deploy']).then(function (stdout) {
+        emitLog(stdout);
+        emitLog('Deployment process done.');
+      }, commandError);
+    } else {
+      executeCommand('npm', ['run', command]).then(function (stdout) {
+        emitLog(stdout);
+        emitLog('Deployment process done.');
+      }, commandError);
+    }
   });
 }
 
 app.post('/deploy', function (req, res) {
-  if (program.token && (!req.query.token || (req.query.token !== program.token))) {
+  if(!req.query.token || !req.query.gitUrl) {
+    return res.sendStatus(403); 
+  }
+  if (program.token && req.query.token !== program.token) {
     return res.sendStatus(403);
   } else {
     res.sendStatus(200);
     emitLog('Deployment triggered!');
-    var projectNameStartingIndex = program.gitUrl.lastIndexOf('/') + 1;
-    var projectNameEndingIndex = program.gitUrl.lastIndexOf('.git');
-    var branch = program.branch || 'master';
-    var projectName = program.gitUrl.substr(projectNameStartingIndex, projectNameEndingIndex - projectNameStartingIndex);
+    var projectNameStartingIndex = req.query.gitUrl.lastIndexOf('/') + 1;
+    var projectNameEndingIndex = req.query.gitUrl.lastIndexOf('.git');
+    var branch = req.query.branch || 'master';
+    var command = req.query.command || '';
+    var projectName = req.query.gitUrl.substr(projectNameStartingIndex, projectNameEndingIndex - projectNameStartingIndex);
     locationExists(projectName).then(function (exists) {
       if (!exists) {
         emitLog('Project has not been cloned yet. Cloning....');
-        executeCommand('git', ['clone', program.gitUrl]).then(function (stdout) {
+        executeCommand('git', ['clone', req.query.gitUrl]).then(function (stdout) {
           emitLog(stdout);
           emitLog('Done cloning');
           emitLog('Checking out branch ' + branch + '....');
           executeCommand('git', ['-C', projectName, 'checkout', 'origin/' + branch]).then(function () {
             emitLog(stdout);
             emitLog('Checked out branch ' + branch);
-            deployProject();
+            deployProject(command);
           }, commandError);
         }, commandError);
       } else {
@@ -114,7 +125,7 @@ app.post('/deploy', function (req, res) {
           executeCommand('git', ['-C', projectName, 'pull', 'origin', branch]).then(function () {
             emitLog(stdout);
             emitLog('Pulled changes');
-            deployProject();
+            deployProject(command);
           }, commandError);
         }, commandError);
       }
@@ -136,7 +147,6 @@ program
   .arguments('<git-url>')
   .option('-t --token <secret-token>', 'application access token')
   .option('-p, --port <port-number>', 'port to listen')
-  .option('-b, --branch <branch-name>', 'branch to checkout')
   .option('-v, --verbose', 'display deployment information on standard output')
   .option('-s, --slack <slack-hook-url>', 'send log to the given <slack-hook-url>')
   .action(function (gitUrl) {
