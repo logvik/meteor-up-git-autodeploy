@@ -144,14 +144,16 @@ function onMupAutoDeployLog(logTxt) {
 
 program
   .version('0.0.1')
-  .arguments('<git-url>')
+  .arguments('start')
   .option('-t --token <secret-token>', 'application access token')
   .option('-p, --port <port-number>', 'port to listen')
   .option('-v, --verbose', 'display deployment information on standard output')
   .option('-s, --slack <slack-hook-url>', 'send log to the given <slack-hook-url>')
-  .action(function (gitUrl) {
+  .action(function (arg) {
+    if(arg != "start") {
+      program.outputHelp();
+    }
     var port = program.port || 80;
-    program.gitUrl = gitUrl;
     mupAutoDeployEmitter.on('log', onMupAutoDeployLog);
     if (program.slack) {
       program.slack = url.parse(program.slack);
