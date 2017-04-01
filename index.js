@@ -72,18 +72,28 @@ function locationExists(locationPath) {
   });
 }
 
-function deployProject(command) {
+function deployProject(projectName, command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
     if(!command) {
-      executeCommand('mup', ['deploy']).then(function (stdout) {
+      executeCommand('cd', [projectName]).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Deployment process done.');
+        emitLog('Cd into ' + projectName);
+        
+        executeCommand('mup', ['deploy']).then(function (stdout) {
+          emitLog(stdout);
+          emitLog('Deployment process done.');
+        }, commandError);
       }, commandError);
     } else {
-      executeCommand('npm', ['run', command]).then(function (stdout) {
+      executeCommand('cd', [projectName]).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Deployment process done.');
+        emitLog('Cd into ' + projectName);
+        
+        executeCommand('npm', ['run', command]).then(function (stdout) {
+          emitLog(stdout);
+          emitLog('Deployment process done.');
+        }, commandError);
       }, commandError);
     }
   });
@@ -113,7 +123,7 @@ app.post('/deploy', function (req, res) {
           executeCommand('git', ['-C', projectName, 'checkout', 'origin/' + branch]).then(function () {
             emitLog(stdout);
             emitLog('Checked out branch ' + branch);
-            deployProject(command);
+            deployProject(projectName, command);
           }, commandError);
         }, commandError);
       } else {
@@ -125,7 +135,7 @@ app.post('/deploy', function (req, res) {
           executeCommand('git', ['-C', projectName, 'pull', 'origin', branch]).then(function () {
             emitLog(stdout);
             emitLog('Pulled changes');
-            deployProject(command);
+            deployProject(projectName, command);
           }, commandError);
         }, commandError);
       }
