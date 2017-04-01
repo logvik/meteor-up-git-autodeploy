@@ -88,13 +88,14 @@ function locationExists(locationPath) {
 function deployProject(projectName, command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
+    emitLog('cwd is ' + program.root + '/' + projectName);
     if(!command) {
-      executeCommand('mup', ['deploy'], { cwd: program.root + '/' + projectName }).then(function (stdout) {
+      execCommand('cd ' + program.root + '/' + projectName +  ' && mup deploy', [], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
         emitLog('Deployment process done.');
       }, commandError);
     } else {
-      executeCommand('npm', ['run', command], { cwd: program.root + '/' + projectName }).then(function (stdout) {
+      execCommand('cd ' + program.root + '/' + projectName +  ' && npm run ' + command, [], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
         emitLog('Deployment process done.');
       }, commandError);
