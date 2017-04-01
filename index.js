@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 const execFile = require('child_process').execFile;
+const _exec = require('child_process').exec;
 const fs = require('fs');
 const EventEmitter = require('events');
 const util = require('util');
@@ -21,6 +22,18 @@ const mupAutoDeployEmitter = new MupAutodeployEmitter();
 function executeCommand(cmd, options) {
   return new Promise(function (resolve, reject) {
     execFile(cmd, options, function (err, stdout, stderr) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
+function execCommand(cmd, options) {
+  return new Promise(function (resolve, reject) {
+    _exec(cmd, options, function (err, stdout, stderr) {
       if (err) {
         reject(err);
       } else {
@@ -76,7 +89,7 @@ function deployProject(projectName, command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
     if(!command) {
-      executeCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
+      execCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
         emitLog(stdout);
         emitLog('Cd into ' + program.root + '/' + projectName);
         
@@ -86,7 +99,7 @@ function deployProject(projectName, command) {
         }, commandError);
       }, commandError);
     } else {
-      executeCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
+      execCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
         emitLog(stdout);
         emitLog('Cd into ' + program.root + '/' + projectName);
         
