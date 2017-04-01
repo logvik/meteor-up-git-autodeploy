@@ -144,7 +144,7 @@ function onMupAutoDeployLog(logTxt) {
 
 program
   .version('0.0.1')
-  .arguments('start')
+  .arguments('<start>')
   .option('-t --token <secret-token>', 'application access token')
   .option('-p, --port <port-number>', 'port to listen')
   .option('-v, --verbose', 'display deployment information on standard output')
