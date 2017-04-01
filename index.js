@@ -76,9 +76,9 @@ function deployProject(projectName, command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
     if(!command) {
-      executeCommand('cd', ['./' + projectName + '/']).then(function (stdout) {
+      executeCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Cd into ' + './' + projectName + '/');
+        emitLog('Cd into ' + program.root + '/' + projectName);
         
         executeCommand('mup', ['deploy']).then(function (stdout) {
           emitLog(stdout);
@@ -86,9 +86,9 @@ function deployProject(projectName, command) {
         }, commandError);
       }, commandError);
     } else {
-      executeCommand('cd', ['./' + projectName + '/']).then(function (stdout) {
+      executeCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Cd into ' + './' + projectName + '/');
+        emitLog('Cd into ' + program.root + '/' + projectName);
         
         executeCommand('npm', ['run', command]).then(function (stdout) {
           emitLog(stdout);
@@ -120,7 +120,7 @@ app.post('/deploy', function (req, res) {
           emitLog(stdout);
           emitLog('Done cloning');
           emitLog('Checking out branch ' + branch + '....');
-          executeCommand('git', ['-C', projectName, 'checkout', 'origin/' + branch]).then(function () {
+          executeCommand('git', ['-C', program.root + '/' + projectName, 'checkout', 'origin/' + branch]).then(function () {
             emitLog(stdout);
             emitLog('Checked out branch ' + branch);
             deployProject(projectName, command);
@@ -128,11 +128,11 @@ app.post('/deploy', function (req, res) {
         }, commandError);
       } else {
         emitLog('Checking out branch ' + branch + '....');
-        executeCommand('git', ['-C', projectName, 'checkout', 'origin/' + branch]).then(function (stdout) {
+        executeCommand('git', ['-C', program.root + '/' + projectName, 'checkout', 'origin/' + branch]).then(function (stdout) {
           emitLog(stdout);
           emitLog('Checked out branch ' + branch);
           emitLog('Pulling changes...');
-          executeCommand('git', ['-C', projectName, 'pull', 'origin', branch]).then(function () {
+          executeCommand('git', ['-C', program.root + '/' + projectName, 'pull', 'origin', branch]).then(function () {
             emitLog(stdout);
             emitLog('Pulled changes');
             deployProject(projectName, command);
@@ -157,6 +157,7 @@ program
   .arguments('<start>')
   .option('-t --token <secret-token>', 'application access token')
   .option('-p, --port <port-number>', 'port to listen')
+  .option('-r, --root <path>', 'root path for code without end slash')
   .option('-v, --verbose', 'display deployment information on standard output')
   .option('-s, --slack <slack-hook-url>', 'send log to the given <slack-hook-url>')
   .action(function (arg) {
@@ -167,6 +168,9 @@ program
     mupAutoDeployEmitter.on('log', onMupAutoDeployLog);
     if (program.slack) {
       program.slack = url.parse(program.slack);
+    }
+    if(!program.root) {
+      program.root = '/opt';
     }
     app.listen(port);
   })
