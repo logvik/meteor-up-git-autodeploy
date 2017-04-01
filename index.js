@@ -89,24 +89,14 @@ function deployProject(projectName, command) {
   return new Promise(function (resolve, reject) {
     emitLog('Starting deployment process....');
     if(!command) {
-      execCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
+      executeCommand('mup', ['deploy'], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Cd into ' + program.root + '/' + projectName);
-        
-        executeCommand('mup', ['deploy']).then(function (stdout) {
-          emitLog(stdout);
-          emitLog('Deployment process done.');
-        }, commandError);
+        emitLog('Deployment process done.');
       }, commandError);
     } else {
-      execCommand('cd', [program.root + '/' + projectName]).then(function (stdout) {
+      executeCommand('npm', ['run', command], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
-        emitLog('Cd into ' + program.root + '/' + projectName);
-        
-        executeCommand('npm', ['run', command]).then(function (stdout) {
-          emitLog(stdout);
-          emitLog('Deployment process done.');
-        }, commandError);
+        emitLog('Deployment process done.');
       }, commandError);
     }
   });
