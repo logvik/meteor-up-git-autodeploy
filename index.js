@@ -93,13 +93,11 @@ function deployProject(projectName, command) {
       execCommand('cd ' + program.root + '/' + projectName +  ' && mup deploy', [], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
         emitLog('Deployment process done.');
-        execCommand('rm -R /tmp/*');
       }, commandError);
     } else {
       execCommand('cd ' + program.root + '/' + projectName +  ' && npm run ' + command, [], { cwd: program.root + '/' + projectName }).then(function (stdout) {
         emitLog(stdout);
         emitLog('Deployment process done.');
-        execCommand('rm -R /tmp/*');
       }, commandError);
     }
   });
