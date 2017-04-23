@@ -117,7 +117,7 @@ app.post('/deploy', function (req, res) {
     var branch = req.query.branch || 'master';
     var command = req.query.command || '';
     var projectName = req.query.gitUrl.substr(projectNameStartingIndex, projectNameEndingIndex - projectNameStartingIndex);
-    locationExists(projectName).then(function (exists) {
+    locationExists(program.root + '/' + projectName).then(function (exists) {
       if (!exists) {
         emitLog('Project has not been cloned yet. Cloning....');
         executeCommand('git', ['clone', req.query.gitUrl]).then(function (stdout) {
